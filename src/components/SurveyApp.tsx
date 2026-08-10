@@ -8,83 +8,102 @@ type Step = {
   id: string;
   question: string;
   eyebrow: string;
-  type: "single" | "multi" | "contact";
+  type: "single" | "multi" | "open";
   options: Option[];
 };
 type Answers = Record<string, string | string[]>;
 type Phase = "intro" | "survey" | "done";
 
-const STORAGE_DRAFT = "mcb-survey-draft";
-const STORAGE_RESPONSES = "mcb-survey-responses";
+const STORAGE_DRAFT = "mcb-brand-survey-draft-v2";
+const STORAGE_RESPONSES = "mcb-brand-survey-responses-v2";
 
 const steps: Step[] = [
   {
-    id: "frequency",
-    eyebrow: "Tu ritual",
-    question: "¿Con qué frecuencia tomas café?",
+    id: "brand_impression",
+    eyebrow: "Primera impresión",
+    question: "Al ver The Mother Coffee Baby por primera vez, ¿qué impresión te genera la marca?",
     type: "single",
     options: [
-      { value: "multiple_day", label: "Varias veces al día", icon: "⚡" },
-      { value: "once_day", label: "Una vez al día", icon: "☕" },
-      { value: "few_week", label: "Algunas veces por semana", icon: "◫" },
-      { value: "rarely", label: "Ocasionalmente", icon: "○" },
+      { value: "love_it", label: "Me encanta, tiene mucha personalidad", icon: "🔥" },
+      { value: "like_it", label: "Me gusta", icon: "👍" },
+      { value: "indifferent", label: "Me es indiferente", icon: "😐" },
+      { value: "no_connection", label: "No conecta conmigo", icon: "👎" },
+      { value: "unclear", label: "No entiendo muy bien el concepto", icon: "😵" },
     ],
   },
   {
-    id: "type",
-    eyebrow: "Tu estilo",
-    question: "¿Qué tipo de café prefieres?",
+    id: "visual_style_rating",
+    eyebrow: "Estilo visual",
+    question: "¿Qué tanto te gusta la imagen y el estilo visual de la marca?",
     type: "single",
     options: [
-      { value: "espresso", label: "Espresso / Americano", icon: "●" },
-      { value: "cold_brew", label: "Cold brew / Café frío", icon: "❄" },
-      { value: "latte", label: "Latte / Cappuccino", icon: "◇" },
-      { value: "drip", label: "Drip / Pour over", icon: "▽" },
-      { value: "any", label: "Cualquier cosa con cafeína", icon: "⚡" },
+      { value: "5", label: "5 — Me encanta", icon: "5" },
+      { value: "4", label: "4 — Me gusta bastante", icon: "4" },
+      { value: "3", label: "3 — Está bien", icon: "3" },
+      { value: "2", label: "2 — Me gusta poco", icon: "2" },
+      { value: "1", label: "1 — No me gusta", icon: "1" },
     ],
   },
   {
-    id: "presentation",
-    eyebrow: "El formato",
-    question: "¿Cuál presentación te interesa más?",
+    id: "trial_intent",
+    eyebrow: "Intención de prueba",
+    question: "Si vieras este café en una tienda o cafetería, ¿te darían ganas de probarlo?",
+    type: "single",
+    options: [
+      { value: "definitely_yes", label: "Sí, definitivamente", icon: "✓" },
+      { value: "probably_yes", label: "Probablemente sí", icon: "+" },
+      { value: "maybe", label: "Tal vez", icon: "~" },
+      { value: "probably_no", label: "Probablemente no", icon: "−" },
+      { value: "no", label: "No", icon: "×" },
+    ],
+  },
+  {
+    id: "brand_attractions",
+    eyebrow: "Lo que conecta",
+    question: "¿Qué es lo que más te atrae de The Mother Coffee Baby?",
     type: "multi",
     options: [
-      { value: "sachet", label: "Sachet / Drip coffee · 1 dosis (10 g)", icon: "▧" },
-      { value: "pouch250", label: "Pouch 250 ml · listo para tomar", icon: "◩" },
-      { value: "pouch500", label: "Pouch 500 ml · listo para tomar", icon: "◧" },
-      { value: "bolsa1000", label: "Bolsa 1000 g · granos / molido", icon: "▰" },
+      { value: "name", label: "El nombre", icon: "Aa" },
+      { value: "logo", label: "El logo", icon: "◎" },
+      { value: "packaging", label: "El diseño / empaque", icon: "▧" },
+      { value: "personality", label: "La personalidad irreverente", icon: "⚡" },
+      { value: "specialty", label: "Que sea café de especialidad", icon: "★" },
+      { value: "origin_quality", label: "El origen / calidad del café", icon: "◆" },
+      { value: "nothing", label: "Nada en particular", icon: "○" },
     ],
   },
   {
-    id: "price",
-    eyebrow: "El valor",
-    question: "¿Cuánto pagarías por 250 g de café de especialidad?",
+    id: "price_willingness",
+    eyebrow: "Precio esperado",
+    question: "¿Cuánto estarías dispuesto/a a pagar por una bolsa de 250 g de café de especialidad como esta?",
     type: "single",
     options: [
-      { value: "under_20", label: "Menos de $20.000 COP", icon: "$" },
-      { value: "20_35", label: "$20.000 – $35.000 COP", icon: "$$" },
-      { value: "35_50", label: "$35.000 – $50.000 COP", icon: "$$$" },
-      { value: "over_50", label: "Más de $50.000 COP · ¡lo vale!", icon: "⚡" },
+      { value: "under_8", label: "Menos de 8 €", icon: "€" },
+      { value: "8_10", label: "8–10 €", icon: "€" },
+      { value: "10_12", label: "10–12 €", icon: "€€" },
+      { value: "12_15", label: "12–15 €", icon: "€€" },
+      { value: "15_18", label: "15–18 €", icon: "€€€" },
+      { value: "over_18", label: "Más de 18 €", icon: "€€€" },
     ],
   },
   {
-    id: "where",
-    eyebrow: "El momento",
-    question: "¿Dónde tomarías The Mother Coffee Baby?",
-    type: "multi",
+    id: "purchase_at_1290",
+    eyebrow: "Decisión de compra",
+    question: "Si una bolsa de 250 g de The Mother Coffee Baby costara 12,90 €, ¿la comprarías?",
+    type: "single",
     options: [
-      { value: "home", label: "En casa", icon: "⌂" },
-      { value: "office", label: "En la oficina / estudio", icon: "▤" },
-      { value: "gym", label: "Pre-entreno / gym", icon: "▲" },
-      { value: "outdoors", label: "Al aire libre / aventuras", icon: "△" },
-      { value: "bar", label: "Bares y eventos", icon: "✦" },
+      { value: "yes", label: "Sí", icon: "✓" },
+      { value: "probably_yes", label: "Probablemente sí", icon: "+" },
+      { value: "maybe", label: "Tal vez", icon: "~" },
+      { value: "probably_no", label: "Probablemente no", icon: "−" },
+      { value: "no", label: "No", icon: "×" },
     ],
   },
   {
-    id: "contact",
-    eyebrow: "Último paso",
-    question: "¿Quieres saber primero cuándo lanzamos?",
-    type: "contact",
+    id: "purchase_requirements",
+    eyebrow: "Tu respuesta",
+    question: "¿Qué tendría que tener este café o esta marca para que dijeras: “lo compraría”?",
+    type: "open",
     options: [],
   },
 ];
@@ -142,7 +161,7 @@ function Intro({ onStart }: { onStart: () => void }) {
       <section className="intro__content">
         <p className="kicker"><Bolt /> Café real · salvaje · sin reglas <Bolt mirrored /></p>
         <h1>Tu café.<br /><span>Tu opinión.</span></h1>
-        <p className="intro__copy">Primero sube el volumen. Después del vídeo comenzarán seis preguntas rápidas.</p>
+        <p className="intro__copy">Primero sube el volumen. Después del vídeo comenzarán siete preguntas rápidas.</p>
         <button className="primary-button" type="button" onClick={playIntro}>
           Comenzar encuesta <span aria-hidden="true">→</span>
         </button>
@@ -175,8 +194,6 @@ function Progress({ current }: { current: number }) {
 function Survey({ onDone }: { onDone: () => void }) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [direction, setDirection] = useState<"next" | "back">("next");
   const [transitioning, setTransitioning] = useState(false);
@@ -186,11 +203,9 @@ function Survey({ onDone }: { onDone: () => void }) {
     const loadDraft = window.setTimeout(() => {
       try {
         const draft = JSON.parse(localStorage.getItem(STORAGE_DRAFT) ?? "null") as
-          | { answers?: Answers; name?: string; email?: string }
+          | { answers?: Answers }
           | null;
         if (draft?.answers) setAnswers(draft.answers);
-        if (draft?.name) setName(draft.name);
-        if (draft?.email) setEmail(draft.email);
       } catch {
         localStorage.removeItem(STORAGE_DRAFT);
       } finally {
@@ -202,17 +217,14 @@ function Survey({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     if (!draftLoaded) return;
-    localStorage.setItem(STORAGE_DRAFT, JSON.stringify({ answers, name, email }));
-  }, [answers, name, email, draftLoaded]);
+    localStorage.setItem(STORAGE_DRAFT, JSON.stringify({ answers }));
+  }, [answers, draftLoaded]);
 
   const step = steps[index];
   const value = answers[step.id];
-  const emailValid = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const canContinue = step.type === "contact"
-    ? emailValid
-    : step.type === "multi"
+  const canContinue = step.type === "multi"
       ? Array.isArray(value) && value.length > 0
-      : typeof value === "string" && value.length > 0;
+      : typeof value === "string" && value.trim().length > 0;
 
   const move = (nextIndex: number, nextDirection: "next" | "back") => {
     setDirection(nextDirection);
@@ -229,7 +241,6 @@ function Survey({ onDone }: { onDone: () => void }) {
       id: crypto.randomUUID(),
       submittedAt: new Date().toISOString(),
       answers,
-      contact: { name: name.trim() || null, email: email.trim() || null },
     };
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_RESPONSES) ?? "[]") as unknown[];
@@ -249,11 +260,20 @@ function Survey({ onDone }: { onDone: () => void }) {
 
   const toggleMulti = (option: string) => {
     const current = Array.isArray(value) ? value : [];
+    if (option === "nothing") {
+      setAnswers((previous) => ({
+        ...previous,
+        [step.id]: current.includes("nothing") ? [] : ["nothing"],
+      }));
+      return;
+    }
+
+    const currentWithoutNothing = current.filter((item) => item !== "nothing");
     setAnswers((previous) => ({
       ...previous,
-      [step.id]: current.includes(option)
-        ? current.filter((item) => item !== option)
-        : [...current, option],
+      [step.id]: currentWithoutNothing.includes(option)
+        ? currentWithoutNothing.filter((item) => item !== option)
+        : [...currentWithoutNothing, option],
     }));
   };
 
@@ -277,29 +297,21 @@ function Survey({ onDone }: { onDone: () => void }) {
             <p className="step__eyebrow">Pregunta {index + 1} · {step.eyebrow}</p>
             <h1 ref={headingRef} tabIndex={-1}>{step.question}</h1>
 
-            {step.type === "contact" ? (
-              <div className="contact-fields">
-                <p>Déjanos tus datos y te avisaremos antes que a nadie. Es opcional y sin spam.</p>
-                <label>
-                  <span>Nombre</span>
-                  <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Tu nombre" />
-                </label>
-                <label>
-                  <span>Correo electrónico</span>
-                  <input
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    autoComplete="email"
-                    inputMode="email"
-                    type="email"
-                    placeholder="tucorreo@ejemplo.com"
-                    aria-invalid={!emailValid}
-                    aria-describedby="email-error"
-                  />
-                </label>
-                <p id="email-error" className={`field-message ${email && !emailValid ? "field-message--error" : ""}`}>
-                  {email && !emailValid ? "Escribe un correo válido o deja el campo vacío." : "Puedes finalizar sin registrar tus datos."}
-                </p>
+            {step.type === "open" ? (
+              <div className="open-response">
+                <label htmlFor="purchase-requirements">Cuéntanos qué haría la diferencia</label>
+                <textarea
+                  id="purchase-requirements"
+                  value={typeof value === "string" ? value : ""}
+                  onChange={(event) => setAnswers((previous) => ({
+                    ...previous,
+                    [step.id]: event.target.value,
+                  }))}
+                  placeholder="Escribe tu respuesta aquí..."
+                  rows={6}
+                  maxLength={800}
+                />
+                <p className="field-message">Máximo 800 caracteres.</p>
               </div>
             ) : (
               <div className="options" role={step.type === "single" ? "radiogroup" : "group"} aria-label={step.question}>
