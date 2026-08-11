@@ -197,7 +197,10 @@ function Survey({ onDone }: { onDone: () => void }) {
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [direction, setDirection] = useState<"next" | "back">("next");
   const [transitioning, setTransitioning] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const responseIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const loadDraft = window.setTimeout(() => {
@@ -236,20 +239,43 @@ function Survey({ onDone }: { onDone: () => void }) {
     }, 180);
   };
 
-  const submit = () => {
+  const submit = async () => {
+    if (submitting) return;
+
+    responseIdRef.current ??= crypto.randomUUID();
     const response = {
-      id: crypto.randomUUID(),
+      id: responseIdRef.current,
       submittedAt: new Date().toISOString(),
       answers,
     };
+
+    setSubmitting(true);
+    setSubmitError("");
+
     try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_RESPONSES) ?? "[]") as unknown[];
-      localStorage.setItem(STORAGE_RESPONSES, JSON.stringify([...stored, response]));
-      localStorage.removeItem(STORAGE_DRAFT);
-    } catch {
-      localStorage.setItem(STORAGE_RESPONSES, JSON.stringify([response]));
+      const apiResponse = await fetch("/api/survey-responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: response.id, answers: response.answers }),
+      });
+
+      if (!apiResponse.ok) throw new Error("Survey submission failed");
+
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_RESPONSES) ?? "[]") as unknown[];
+        localStorage.setItem(STORAGE_RESPONSES, JSON.stringify([...stored, response]));
+        localStorage.removeItem(STORAGE_DRAFT);
+      } catch {
+        // Supabase is the source of truth; local storage is only a convenience.
+      }
+
+      onDone();
+    } catch (error) {
+      console.error(error);
+      setSubmitError("No hemos podido guardar tus respuestas. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSubmitting(false);
     }
-    onDone();
   };
 
   const next = () => {
@@ -345,10 +371,15 @@ function Survey({ onDone }: { onDone: () => void }) {
               <button type="button" className="back-button" disabled={index === 0} onClick={() => move(index - 1, "back")}>
                 ← Atrás
               </button>
-              <button type="button" className="primary-button" disabled={!canContinue} onClick={next}>
-                {index === steps.length - 1 ? "Enviar respuestas" : "Continuar"} <span aria-hidden="true">→</span>
+              <button type="button" className="primary-button" disabled={!canContinue || submitting} onClick={next}>
+                {submitting
+                  ? "Enviando..."
+                  : index === steps.length - 1
+                    ? "Enviar respuestas"
+                    : "Continuar"} <span aria-hidden="true">→</span>
               </button>
             </nav>
+            {submitError && <p className="submit-error" role="alert">{submitError}</p>}
           </div>
         </div>
       </section>

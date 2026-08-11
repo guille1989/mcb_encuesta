@@ -464,3 +464,10 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+.submit-error {
+  margin: 14px 0 0;
+  color: #b42318;
+  font-size: .9rem;
+  font-weight: 700;
+  text-align: right;
+}
