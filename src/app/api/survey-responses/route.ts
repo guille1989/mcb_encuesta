@@ -3,8 +3,8 @@ type SurveyAnswers = {
   visual_style_rating: string;
   trial_intent: string;
   brand_attractions: string[];
-  price_willingness: string;
-  purchase_at_1290: string;
+  sachet_price: string;
+  box_price_range: string;
   purchase_requirements: string;
 };
 
@@ -33,21 +33,8 @@ const allowedValues = {
     "origin_quality",
     "nothing",
   ]),
-  price_willingness: new Set([
-    "under_8",
-    "8_10",
-    "10_12",
-    "12_15",
-    "15_18",
-    "over_18",
-  ]),
-  purchase_at_1290: new Set([
-    "yes",
-    "probably_yes",
-    "maybe",
-    "probably_no",
-    "no",
-  ]),
+  sachet_price: new Set(["2", "2.5", "3", "3.5", "4", "4.5", "5"]),
+  box_price_range: new Set(["10", "15", "20", "25"]),
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -61,8 +48,8 @@ function parseAnswers(value: unknown): SurveyAnswers | null {
     "brand_impression",
     "visual_style_rating",
     "trial_intent",
-    "price_willingness",
-    "purchase_at_1290",
+    "sachet_price",
+    "box_price_range",
   ] as const;
 
   for (const field of singleChoiceFields) {
@@ -98,8 +85,8 @@ function parseAnswers(value: unknown): SurveyAnswers | null {
     visual_style_rating: value.visual_style_rating as string,
     trial_intent: value.trial_intent as string,
     brand_attractions: attractions as string[],
-    price_willingness: value.price_willingness as string,
-    purchase_at_1290: value.purchase_at_1290 as string,
+    sachet_price: value.sachet_price as string,
+    box_price_range: value.box_price_range as string,
     purchase_requirements: requirements.trim(),
   };
 }
@@ -155,9 +142,15 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         id: responseId,
         submitted_at: new Date().toISOString(),
-        ...answers,
+        brand_impression: answers.brand_impression,
         visual_style_rating: Number(answers.visual_style_rating),
-        survey_version: "v2",
+        trial_intent: answers.trial_intent,
+        brand_attractions: answers.brand_attractions,
+        // Keep the existing Supabase schema while storing the answers to the new questions.
+        price_willingness: answers.sachet_price,
+        purchase_at_1290: answers.box_price_range,
+        purchase_requirements: answers.purchase_requirements,
+        survey_version: "v3",
       }),
       cache: "no-store",
     });

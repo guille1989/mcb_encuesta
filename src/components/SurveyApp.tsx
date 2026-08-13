@@ -14,8 +14,8 @@ type Step = {
 type Answers = Record<string, string | string[]>;
 type Phase = "intro" | "survey" | "done";
 
-const STORAGE_DRAFT = "mcb-brand-survey-draft-v2";
-const STORAGE_RESPONSES = "mcb-brand-survey-responses-v2";
+const STORAGE_DRAFT = "mcb-brand-survey-draft-v3";
+const STORAGE_RESPONSES = "mcb-brand-survey-responses-v3";
 
 const steps: Step[] = [
   {
@@ -73,30 +73,30 @@ const steps: Step[] = [
     ],
   },
   {
-    id: "price_willingness",
-    eyebrow: "Precio esperado",
-    question: "¿Cuánto estarías dispuesto/a a pagar por una bolsa de 250 g de café de especialidad como esta?",
+    id: "sachet_price",
+    eyebrow: "Precio bolsita individual",
+    question: "¿Cuánto pagarías por una bolsita de café individual?",
     type: "single",
     options: [
-      { value: "under_8", label: "Menos de 8 €", icon: "€" },
-      { value: "8_10", label: "8–10 €", icon: "€" },
-      { value: "10_12", label: "10–12 €", icon: "€€" },
-      { value: "12_15", label: "12–15 €", icon: "€€" },
-      { value: "15_18", label: "15–18 €", icon: "€€€" },
-      { value: "over_18", label: "Más de 18 €", icon: "€€€" },
+      { value: "2", label: "2,00 €", icon: "€" },
+      { value: "2.5", label: "2,50 €", icon: "€" },
+      { value: "3", label: "3,00 €", icon: "€" },
+      { value: "3.5", label: "3,50 €", icon: "€" },
+      { value: "4", label: "4,00 €", icon: "€" },
+      { value: "4.5", label: "4,50 €", icon: "€" },
+      { value: "5", label: "5,00 €", icon: "€" },
     ],
   },
   {
-    id: "purchase_at_1290",
-    eyebrow: "Decisión de compra",
-    question: "Si una bolsa de 250 g de The Mother Coffee Baby costara 12,90 €, ¿la comprarías?",
+    id: "box_price_range",
+    eyebrow: "Precio caja x10",
+    question: "Por una caja de 10 bolsitas de café, ¿qué rango de precio pagarías?",
     type: "single",
     options: [
-      { value: "yes", label: "Sí", icon: "✓" },
-      { value: "probably_yes", label: "Probablemente sí", icon: "+" },
-      { value: "maybe", label: "Tal vez", icon: "~" },
-      { value: "probably_no", label: "Probablemente no", icon: "−" },
-      { value: "no", label: "No", icon: "×" },
+      { value: "10", label: "10 €", icon: "€" },
+      { value: "15", label: "15 €", icon: "€" },
+      { value: "20", label: "20 €", icon: "€" },
+      { value: "25", label: "25 €", icon: "€" },
     ],
   },
   {
@@ -259,7 +259,18 @@ function Survey({ onDone }: { onDone: () => void }) {
         body: JSON.stringify({ id: response.id, answers: response.answers }),
       });
 
-      if (!apiResponse.ok) throw new Error("Survey submission failed");
+      if (!apiResponse.ok) {
+        let message = `Survey submission failed (${apiResponse.status})`;
+
+        try {
+          const payload = await apiResponse.json() as { error?: unknown };
+          if (typeof payload.error === "string") message = payload.error;
+        } catch {
+          // Keep the status-based fallback when the API response is not JSON.
+        }
+
+        throw new Error(message);
+      }
 
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_RESPONSES) ?? "[]") as unknown[];
